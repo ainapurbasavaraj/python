@@ -37,7 +37,7 @@ def create_store():
 # GET /store/name
 @app.route("/store/<string:name>")
 def get_store(name):
-    return jsonify(str(collection.find_one({"name": "my_store"})))
+    return jsonify(str(collection.find_one({"name": name})))
 
 # GET /store
 @app.route("/stores")
@@ -70,10 +70,9 @@ def create_item_in_store(name):
 # GET /store/<string:name>/item
 @app.route("/store/<string:name>/item")
 def get_item_in_store(name):
-    for store in stores:
-        if name == store.get("name"):
-            return jsonify({'items': store.get("items")})
-    return "None"
+    store = collection.find_one({"name": name})
+    return jsonify({'items': store.get("items")})
+    
 
 if __name__ == "__main__":
     app.run(debug = True, host = "0.0.0.0", port = 5000)
