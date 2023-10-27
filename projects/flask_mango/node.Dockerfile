@@ -10,6 +10,7 @@ WORKDIR /app
 RUN pip3 install -r requirements.txt
 
 COPY ./requirements.txt /app
+COPY ./*.py /app
 
 ENTRYPOINT [ "python3" ]
 

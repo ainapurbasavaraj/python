@@ -5,17 +5,33 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 import urllib.parse
 import json
+import os
 
 '''
 Mongodb connection string
 mongodb+srv://<username>:<password>@basavaraj-cluster.8gchilj.mongodb.net/?retryWrites=true&w=majority
 '''
-username = urllib.parse.quote_plus('bainapur')
-password = urllib.parse.quote_plus('Amadeus@125')
+
+
+#username = urllib.parse.quote_plus('bainapur')
+#password = urllib.parse.quote_plus('Amadeus@125')
+
+#Get the MANGO_CREDENTIALS from secrets created by kubernetes.
+mango_username = os.environ["MANGO_USERNAME"]
+mango_password = os.environ["MANGO_PASSWORD"]
+username = urllib.parse.quote_plus(mango_username)
+password = urllib.parse.quote_plus(mango_password)
 uri = 'mongodb+srv://%s:%s@basavaraj-cluster.8gchilj.mongodb.net/?retryWrites=true&w=majority' %(username,password)
+db_name = "my_store-db"
+#Get the uri from configmap
+if os.path.exists("/etc/config/uri"):
+    with open("/etc/config/uri", "r") as f:
+        uri = f.readline().strip()
+        uri = uri.format(username=username,password=password)
+
 # Create a new client and connect to the server
 client = MongoClient(uri, server_api=ServerApi('1'))
-db = client["my_store-db"]
+db = client[db_name]
 collection = db.my_store
 
 app = Flask(__name__)
@@ -45,7 +61,7 @@ def get_stores():
     stores = []
     for x in collection.find({}):
         stores.append(x)
-    
+
     return jsonify(str(stores))
 
 #POST /store/<string:name>/item {name:, price:,}
@@ -63,7 +79,7 @@ def create_item_in_store(name):
         ]
     }}
     collection.update_one(query,newValues)
-    
+
     updated_list = [x for x in collection.find({})]
     return jsonify(str(updated_list))
 
@@ -72,7 +88,7 @@ def create_item_in_store(name):
 def get_item_in_store(name):
     store = collection.find_one({"name": name})
     return jsonify({'items': store.get("items")})
-    
+
 
 if __name__ == "__main__":
     app.run(debug = True, host = "0.0.0.0", port = 5000)

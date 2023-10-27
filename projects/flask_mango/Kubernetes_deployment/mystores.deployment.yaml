@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-stores-deploy
+  labels:
+    app: my-stores
+
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: my-stores
+  template:
+    metadata:
+      labels:
+        app: my-stores
+
+    spec:
+      containers:
+      - name: my-stores
+        image: bainapur/webserver:0.1.0
+        ports:
+        - containerPort: 5000
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+        volumeMounts:
+            - name: mango-settings
+              mountPath: /etc/config
+        env:
+        - name: MANGO_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key : mango-username
+        - name: MANGO_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key : mango-password
+      volumes:
+      - name: mango-settings
+        configMap:
+          name: mango-settings
